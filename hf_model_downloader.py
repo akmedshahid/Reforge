@@ -23,29 +23,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable
 
-HfApi = None
-snapshot_download = None
-
-
-def ensure_hf_dependencies() -> bool:
-    """Load Hugging Face dependencies lazily to avoid hard crash at startup."""
-    global HfApi, snapshot_download
-    if HfApi is not None and snapshot_download is not None:
-        return True
-
-    try:
-        from huggingface_hub import HfApi as imported_hfapi, snapshot_download as imported_snapshot_download
-    except ModuleNotFoundError as import_error:
-        print("Missing dependency: huggingface_hub")
-        print("Install it with one of the following commands:")
-        print("  python -m pip install -r requirements.txt")
-        print("  python -m pip install huggingface_hub")
-        print(f"Technical detail: {import_error}")
-        return False
-
-    HfApi = imported_hfapi
-    snapshot_download = imported_snapshot_download
-    return True
+from huggingface_hub import HfApi, snapshot_download
 
 HF_URL_RE = re.compile(
     r"^(?:https?://)?(?:www\.)?huggingface\.co/(?P<repo>[^/]+/[^/]+)(?:/(?:tree|resolve)/(?P<revision>[^/?#]+))?",
@@ -275,9 +253,6 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> int:
-    if not ensure_hf_dependencies():
-        return 3
-
     parser = build_parser()
     args = parser.parse_args()
     args = interactive_prompt(args)
